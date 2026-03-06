@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Donor List</title>
+
+    <style>
+        table{
+            border-collapse:collapse;
+            width:80%;
+            margin:auto;
+        }
+
+        th,td{
+            border:1px solid black;
+            padding:10px;
+            text-align:center;
+        }
+
+        th{
+            background:#e74c3c;
+            color:white;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2 style="text-align:center;">🩸 Donor List</h2>
+
+<table>
+
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Blood</th>
+    <th>Phone</th>
+    <th>City</th>
+    <th>Action</th>
+</tr>
+
+
+{% for d in donors %}
+<tr>
+    <td>{{ d[0] }}</td>
+    <td>{{ d[1] }}</td>
+    <td>{{ d[2] }}</td>
+    <td>{{ d[3] }}</td>
+    <td>{{ d[4] }}</td>
+
+    <td>
+        <a href="/delete/{{ d[0] }}"
+           onclick="return confirm('Are you sure to delete this donor?')">
+           ❌ Delete
+        </a>
+    </td>
+</tr>
+{% endfor %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <p style="color:red; font-weight:bold;">
+        {{ messages[0] }}
+    </p>
+  {% endif %}
+{% endwith %}
+
+
+
+{% if donors|length == 0 %}
+<p style="text-align:center;color:red;">
+    No donors found for this blood group!
+</p>
+{% endif %}
+
+
+</table>
+
+<br>
+
+<center>
+<a href="/">Back</a> |
+<a href="/logout">Logout</a>
+</center>
+
+</body>
+</html>

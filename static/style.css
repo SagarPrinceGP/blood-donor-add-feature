@@ -1,0 +1,40 @@
+body {
+    font-family: Arial;
+    background: #f4f4f4;
+    text-align: center;
+}
+
+h2 {
+    color: red;
+}
+
+form {
+    background: white;
+    padding: 20px;
+    width: 300px;
+    margin: auto;
+    border-radius: 10px;
+}
+
+input, button {
+    width: 90%;
+    padding: 8px;
+    margin: 8px;
+}
+
+button {
+    background: red;
+    color: white;
+    border: none;
+}
+
+table {
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+}
+
+table, th, td {
+    border: 1px solid black;
+    padding: 8px;
+}

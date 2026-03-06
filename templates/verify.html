@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Signup</title>
+
+<style>
+
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(to right,#43cea2,#185a9d);
+    font-family:Arial;
+}
+
+.signup-box{
+    width:350px;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    text-align:center;
+    box-shadow:0 0 15px gray;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    background:#185a9d;
+    color:white;
+    border:none;
+    border-radius:5px;
+    font-size:16px;
+}
+
+.pass-rule{
+    font-size:13px;
+    color:#555;
+    text-align:left;
+    margin:10px 0;
+}
+
+a{
+    text-decoration:none;
+    color:purple;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="signup-box">
+
+<h2>✏️ Sign Up</h2>
+
+<input type="text" placeholder="Enter Your Name">
+
+<input type="email" placeholder="Enter Your Email">
+
+<input type="password" id="pass" placeholder="Enter Password">
+
+<div class="pass-rule">
+Password must contain:
+<ul>
+<li>Minimum 8 characters</li>
+<li>One Capital Letter (A-Z)</li>
+<li>One Number (0-9)</li>
+<li>One Special Character (@#$%)</li>
+</ul>
+</div>
+
+<input type="checkbox" onclick="showPass()"> Show Password
+
+<br><br>
+
+<button>Register</button>
+
+<p><a href="#">Already have account? Login</a></p>
+
+</div>
+
+<script>
+function showPass(){
+    let p = document.getElementById("pass");
+    p.type = (p.type === "password") ? "text" : "password";
+}
+</script>
+
+</body>
+</html>

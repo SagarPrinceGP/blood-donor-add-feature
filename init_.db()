@@ -1,0 +1,32 @@
+def init_db():
+
+    conn = sqlite3.connect("donors.db")
+    c = conn.cursor()
+
+    # Create donors table
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS donors(
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        blood TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        city TEXT NOT NULL
+    )
+    """)
+
+    # Create users table
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+    print("Database & Tables Created Successfully")
+
+init_db()
