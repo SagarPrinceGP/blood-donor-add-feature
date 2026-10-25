@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Donor #{{ donor.id }} - LifePulse{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 1.75rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--secondary); display: flex; align-items: center; gap: 0.65rem;">
+                <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i>
+                Edit Donor Details
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.25rem;">
+                Updating record for <strong style="color: var(--secondary);">{{ donor.name }}</strong> (ID: #{{ donor.id }})
+            </p>
+        </div>
+
+        <a href="/donors" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left"></i> Back to Donors
+        </a>
+    </div>
+
+    <div class="card">
+        <form action="/edit/{{ donor.id }}" method="POST">
+            
+            <!-- Full Name -->
+            <div class="form-group">
+                <label class="form-label" for="name">Full Name <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ donor.name }}" required>
+            </div>
+
+            <!-- Blood Group & City -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="blood">Blood Group <span style="color: var(--danger);">*</span></label>
+                    <select id="blood" name="blood" class="form-select" required>
+                        {% for b in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
+                            <option value="{{ b }}" {% if donor.blood == b %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="city">City / Town <span style="color: var(--danger);">*</span></label>
+                    <input type="text" id="city" name="city" class="form-control" value="{{ donor.city }}" required>
+                </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone Number <span style="color: var(--danger);">*</span></label>
+                <input type="tel" id="phone" name="phone" class="form-control" value="{{ donor.phone }}" pattern="[0-9]{10}" required>
+            </div>
+
+            <!-- Age & Gender -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="age">Age</label>
+                    <input type="number" id="age" name="age" class="form-control" min="18" max="65" value="{{ donor.age if donor.age else 28 }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="gender">Gender</label>
+                    <select id="gender" name="gender" class="form-select">
+                        <option value="Male" {% if donor.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if donor.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if donor.gender == 'Other' %}selected{% endif %}>Other</option>
+                        <option value="Not Specified" {% if donor.gender == 'Not Specified' %}selected{% endif %}>Not Specified</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="form-group">
+                <label class="form-label" for="status">Availability Status</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="Available" {% if donor.status == 'Available' %}selected{% endif %}>🟢 Available for Immediate Donation</option>
+                    <option value="Donated Recently" {% if donor.status == 'Donated Recently' %}selected{% endif %}>🟡 Donated Recently (< 90 Days)</option>
+                    <option value="Unavailable" {% if donor.status == 'Unavailable' %}selected{% endif %}>⚪ Temporarily Unavailable</option>
+                </select>
+            </div>
+
+            <!-- Last Donated -->
+            <div class="form-group">
+                <label class="form-label" for="last_donated">Last Donation Date</label>
+                <input type="date" id="last_donated" name="last_donated" class="form-control" value="{{ donor.last_donated if donor.last_donated else '' }}">
+            </div>
+
+            <!-- Total Donations -->
+            <div class="form-group">
+                <label class="form-label" for="total_donations">Lifetime Donations Count</label>
+                <input type="number" id="total_donations" name="total_donations" class="form-control" min="0" value="{{ donor.total_donations if donor.total_donations else 1 }}">
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 0.75rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="fa-solid fa-floppy-disk"></i> Update Donor Record
+                </button>
+                <a href="/donors" class="btn btn-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+{% endblock %}

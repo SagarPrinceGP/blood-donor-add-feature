@@ -1,86 +1,222 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Donor List</title>
+{% extends "base.html" %}
 
-    <style>
-        table{
-            border-collapse:collapse;
-            width:80%;
-            margin:auto;
-        }
+{% block title %}Donors Directory - LifePulse{% endblock %}
 
-        th,td{
-            border:1px solid black;
-            padding:10px;
-            text-align:center;
-        }
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--secondary); display: flex; align-items: center; gap: 0.65rem;">
+            <i class="fa-solid fa-users" style="color: var(--primary);"></i>
+            Blood Donors Directory
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.92rem; margin-top: 0.25rem;">
+            Showing {{ donors|length }} registered donor{{ 's' if donors|length != 1 else '' }} available in the network
+        </p>
+    </div>
 
-        th{
-            background:#e74c3c;
-            color:white;
-        }
-    </style>
-</head>
-
-<body>
-
-<h2 style="text-align:center;">🩸 Donor List</h2>
-
-<table>
-
-<tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>Blood</th>
-    <th>Phone</th>
-    <th>City</th>
-    <th>Action</th>
-</tr>
-
-
-{% for d in donors %}
-<tr>
-    <td>{{ d[0] }}</td>
-    <td>{{ d[1] }}</td>
-    <td>{{ d[2] }}</td>
-    <td>{{ d[3] }}</td>
-    <td>{{ d[4] }}</td>
-
-    <td>
-        <a href="/delete/{{ d[0] }}"
-           onclick="return confirm('Are you sure to delete this donor?')">
-           ❌ Delete
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <a href="/export_csv" class="btn btn-secondary" title="Export as CSV spreadsheet">
+            <i class="fa-solid fa-file-arrow-down"></i> Export CSV
         </a>
-    </td>
-</tr>
-{% endfor %}
+        <a href="/add_donor" class="btn btn-primary">
+            <i class="fa-solid fa-user-plus"></i> Add New Donor
+        </a>
+    </div>
+</div>
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <p style="color:red; font-weight:bold;">
-        {{ messages[0] }}
-    </p>
-  {% endif %}
-{% endwith %}
+<!-- SEARCH & FILTER TOOLBAR -->
+<div class="toolbar-card">
+    <form method="GET" action="/donors" class="toolbar-grid">
+        
+        <!-- Search Keyword -->
+        <div class="search-input-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="q" value="{{ query_q }}" class="form-control" placeholder="Search by name, phone, or city...">
+        </div>
 
+        <!-- Blood Group Filter -->
+        <div style="min-width: 150px;">
+            <select name="blood" class="form-select">
+                <option value="">All Blood Groups</option>
+                {% for b in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
+                    <option value="{{ b }}" {% if selected_blood == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
+        <!-- City Filter -->
+        <div style="min-width: 150px;">
+            <select name="city" class="form-select">
+                <option value="">All Cities</option>
+                {% for c in cities %}
+                    <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-{% if donors|length == 0 %}
-<p style="text-align:center;color:red;">
-    No donors found for this blood group!
-</p>
-{% endif %}
+        <!-- Status Filter -->
+        <div style="min-width: 160px;">
+            <select name="status" class="form-select">
+                <option value="">All Availability</option>
+                <option value="Available" {% if selected_status == 'Available' %}selected{% endif %}>Available Now</option>
+                <option value="Donated Recently" {% if selected_status == 'Donated Recently' %}selected{% endif %}>Donated Recently</option>
+                <option value="Unavailable" {% if selected_status == 'Unavailable' %}selected{% endif %}>Unavailable</option>
+            </select>
+        </div>
 
+        <!-- Filter Submit & Reset -->
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary">
+                <i class="fa-solid fa-filter"></i> Filter
+            </button>
+            {% if query_q or selected_blood or selected_city or selected_status %}
+                <a href="/donors" class="btn btn-secondary" title="Clear Filters">
+                    <i class="fa-solid fa-rotate-left"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
 
-</table>
+<!-- DONORS TABLE / DIRECTORY -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    {% if donors and donors|length > 0 %}
+    <div class="table-responsive" style="border: none;">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Group</th>
+                    <th>Donor Name & Details</th>
+                    <th>City / Location</th>
+                    <th>Availability</th>
+                    <th>Direct Contact</th>
+                    <th style="text-align: right; padding-right: 1.5rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in donors %}
+                <tr>
+                    <td>
+                        <span class="blood-pill" style="font-size: 1rem; padding: 0.35rem 0.75rem;">
+                            {{ d.blood }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; font-size: 1rem; color: var(--secondary);">
+                            {{ d.name }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 0.6rem; align-items: center; margin-top: 0.2rem;">
+                            <span><i class="fa-solid fa-venus-mars"></i> {{ d.gender if d.gender else 'Not Specified' }}</span>
+                            <span>&bull;</span>
+                            <span>Age: {{ d.age if d.age else '25' }}</span>
+                            {% if d.total_donations and d.total_donations > 2 %}
+                                <span>&bull;</span>
+                                <span style="color: #d97706; font-weight: 600;"><i class="fa-solid fa-medal"></i> Hero Donor ({{ d.total_donations }}x)</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.4rem; font-weight: 600; color: var(--secondary);">
+                            <i class="fa-solid fa-location-dot" style="color: #ef4444;"></i>
+                            <span>{{ d.city|title }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if d.status == 'Available' %}
+                            <span class="status-badge status-available">
+                                <i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Available
+                            </span>
+                        {% elif d.status == 'Donated Recently' %}
+                            <span class="status-badge status-recent">
+                                <i class="fa-solid fa-clock" style="font-size: 0.65rem;"></i> Donated Recently
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-unavailable">
+                                <i class="fa-solid fa-ban" style="font-size: 0.65rem;"></i> Unavailable
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem; align-items: center;">
+                            <a href="https://wa.me/91{{ d.phone|replace(' ', '')|replace('-', '') }}?text=Hello%20{{ d.name }}%2C%20we%20found%20your%20profile%20on%20LifePulse%20Blood%20Network.%20Are%20you%20available%20to%20donate%20{{ d.blood }}%20blood%20in%20{{ d.city }}%3F" 
+                               target="_blank" class="btn btn-sm btn-whatsapp" title="Send WhatsApp Message">
+                                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                            </a>
+                            <a href="tel:{{ d.phone }}" class="btn btn-sm btn-call" title="Call Donor">
+                                <i class="fa-solid fa-phone"></i>
+                            </a>
+                            <button onclick="copyToClipboard('{{ d.phone }}', '{{ d.name }}\'s phone')" class="btn btn-sm btn-secondary" title="Copy Phone Number">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td style="text-align: right; padding-right: 1.5rem;">
+                        <div style="display: inline-flex; gap: 0.4rem;">
+                            <a href="/edit/{{ d.id }}" class="btn btn-sm btn-secondary" title="Edit Donor Information">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <button onclick="confirmDelete('{{ d.id }}', '{{ d.name }}')" class="btn btn-sm btn-danger" title="Delete Donor">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 1.5rem;">
+        <div style="width: 72px; height: 72px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; color: #ef4444; font-size: 2rem;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--secondary);">No donors found matching criteria</h3>
+        <p style="color: var(--text-muted); max-width: 450px; margin: 0.5rem auto 1.5rem; font-size: 0.95rem;">
+            Try adjusting your search query, selecting different blood groups or cities, or add a new donor to the registry.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <a href="/donors" class="btn btn-secondary">
+                <i class="fa-solid fa-rotate-left"></i> Reset Filters
+            </a>
+            <a href="/add_donor" class="btn btn-primary">
+                <i class="fa-solid fa-user-plus"></i> Add New Donor
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
 
-<br>
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
+        <div style="width: 58px; height: 58px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: #ef4444; font-size: 1.6rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--secondary); margin-bottom: 0.5rem;">Delete Donor Record?</h3>
+        <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem;">
+            Are you sure you want to delete <strong id="deleteDonorName" style="color: var(--secondary);"></strong>? This action cannot be undone.
+        </p>
+        <div style="display: flex; gap: 0.75rem; justify-content: center;">
+            <button onclick="closeDeleteModal()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+            <a id="deleteConfirmBtn" href="#" class="btn btn-danger" style="flex: 1;">
+                <i class="fa-regular fa-trash-can"></i> Delete
+            </a>
+        </div>
+    </div>
+</div>
 
-<center>
-<a href="/">Back</a> |
-<a href="/logout">Logout</a>
-</center>
+{% endblock %}
 
-</body>
-</html>
+{% block extra_scripts %}
+<script>
+    function confirmDelete(id, name) {
+        document.getElementById('deleteDonorName').innerText = name;
+        document.getElementById('deleteConfirmBtn').href = '/delete/' + id;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+</script>
+{% endblock %}

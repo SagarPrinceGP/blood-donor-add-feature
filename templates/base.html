@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LifePulse - Smart Blood Donation Network{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <!-- Chart.js for Interactive Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="brand-logo">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-droplet"></i>
+                </div>
+                <span>Life<span style="color: var(--primary);">Pulse</span></span>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="mobile-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <!-- Navigation Links -->
+            <ul class="nav-links" id="navLinks">
+                <li class="nav-item">
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                        <i class="fa-solid fa-chart-pie"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/donors" class="{% if request.path == '/donors' or request.path == '/view' %}active{% endif %}">
+                        <i class="fa-solid fa-users"></i> Donors Directory
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/add_donor" class="{% if request.path == '/add_donor' %}active{% endif %}">
+                        <i class="fa-solid fa-user-plus"></i> Add Donor
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/requests" class="{% if request.path == '/requests' %}active{% endif %}">
+                        <i class="fa-solid fa-kit-medical"></i> Urgent Requests
+                        {% if pending_requests_count is defined and pending_requests_count > 0 %}
+                            <span class="nav-badge">{{ pending_requests_count }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/compatibility" class="{% if request.path == '/compatibility' %}active{% endif %}">
+                        <i class="fa-solid fa-dna"></i> Compatibility
+                    </a>
+                </li>
+            </ul>
+
+            <!-- User Pill & Logout -->
+            <div class="nav-user">
+                {% if session.get('user') %}
+                    <div class="user-pill" title="Logged in user">
+                        <div class="user-avatar">
+                            {{ session.get('user', 'U')[0]|upper }}
+                        </div>
+                        <span>{{ session.get('user') }}</span>
+                    </div>
+                    <a href="/logout" class="btn-logout" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Logout</span>
+                    </a>
+                {% else %}
+                    <a href="/login" class="btn btn-primary btn-sm">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN BODY CONTENT -->
+    <main class="main-wrapper">
+        <!-- Flash Alert Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, msg in messages %}
+                        <div class="alert alert-{{ category if category != 'message' else 'success' }}">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                {% if category == 'danger' or category == 'error' %}
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fa-solid fa-circle-exclamation"></i>
+                                {% elif category == 'info' %}
+                                    <i class="fa-solid fa-circle-info"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-circle-check"></i>
+                                {% endif %}
+                                <span>{{ msg }}</span>
+                            </div>
+                            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast-notice">
+        <i class="fa-solid fa-circle-check" style="color: #4ade80;"></i>
+        <span id="toastMsg">Action completed successfully</span>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="brand-icon" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-droplet"></i>
+                </div>
+                <div>
+                    <strong style="color: var(--secondary);">LifePulse Blood Donor Network</strong>
+                    <p style="font-size: 0.8rem; margin-top: 0.15rem;">Connecting noble blood donors with critical emergencies.</p>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <div class="emergency-pill">
+                    <i class="fa-solid fa-phone-volume"></i> Emergency Toll-Free: 104 / 108 / 1910
+                </div>
+                <span style="font-size: 0.82rem;">Secure SQLite Database • Flask 3.x</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- HELPER JAVASCRIPT -->
+    <script>
+        // Toggle mobile navigation
+        function toggleMobileNav() {
+            const nav = document.getElementById('navLinks');
+            nav.classList.toggle('active');
+        }
+
+        // Show Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgSpan = document.getElementById('toastMsg');
+            msgSpan.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Copy text to clipboard
+        function copyToClipboard(text, label = "Phone number") {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`${label} copied to clipboard!`);
+            }).catch(err => {
+                showToast(`Copied: ${text}`);
+            });
+        }
+
+        // Auto dismiss flash alerts after 6 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(al => {
+                al.style.transition = 'opacity 0.5s ease';
+                al.style.opacity = '0';
+                setTimeout(() => al.remove(), 500);
+            });
+        }, 6000);
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

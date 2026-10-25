@@ -1,106 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Reset Password</title>
-
-<style>
-
-body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    background:linear-gradient(to right,#ff512f,#dd2476);
-    font-family:Arial;
-}
-
-/* Main Box */
-.box{
-    width:360px;
-    background:white;
-    padding:30px;
-    border-radius:12px;
-    text-align:center;
-
-    box-shadow:0 0 25px rgba(0,0,0,0.3);
-}
-
-/* Heading */
-.box h2{
-    color:#dd2476;
-    margin-bottom:20px;
-}
-
-/* Inputs */
-.box input{
-    width:90%;
-    padding:12px;
-    margin:10px 0;
-
-    border:1px solid #ccc;
-    border-radius:6px;
-    font-size:14px;
-}
-
-/* Button */
-.box button{
-    width:95%;
-    padding:12px;
-    margin-top:15px;
-
-    background:#dd2476;
-    color:white;
-
-    border:none;
-    border-radius:6px;
-
-    font-size:16px;
-    cursor:pointer;
-}
-
-.box button:hover{
-    background:#c81e5a;
-}
-
-/* Error Message */
-.error{
-    color:red;
-    margin-top:10px;
-    font-weight:bold;
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set New Password - LifePulse Blood Network</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<body class="auth-page">
 
-<body>
+    <div class="auth-card" style="max-width: 460px;">
+        
+        <div class="auth-header">
+            <div class="brand-icon">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2>Reset Password</h2>
+            <p>Set a new, secure password for your LifePulse account.</p>
+        </div>
 
-<div class="box">
+        {% if error %}
+        <div class="alert alert-danger" style="margin-bottom: 1.5rem; font-size: 0.88rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+        </div>
+        {% endif %}
 
-<h2>🔒 Reset Password</h2>
+        <form action="/reset" method="POST">
+            
+            <div class="form-group">
+                <label class="form-label" for="new_password">New Password</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Enter new strong password" required autofocus>
+                    <button type="button" class="password-toggle-btn" onclick="togglePassword('new_password', this)" title="Show/Hide Password">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
 
-<form method="POST">
+            <div class="form-group">
+                <label class="form-label" for="confirm_password">Confirm New Password</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm password" required>
+                    <button type="button" class="password-toggle-btn" onclick="togglePassword('confirm_password', this)" title="Show/Hide Password">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
 
-<input type="password"
-       name="new_password"
-       placeholder="Enter New Password"
-       required>
+            <div class="password-rules" style="margin-top: 0.5rem;">
+                <span style="font-weight: 600; color: var(--secondary);">Must contain:</span>
+                <ul>
+                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> Minimum 8 characters</li>
+                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> At least one uppercase letter (A-Z)</li>
+                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> At least one number (0-9)</li>
+                    <li><i class="fa-solid fa-check" style="color: #059669;"></i> At least one special symbol (!@#$%^&*)</li>
+                </ul>
+            </div>
 
-<input type="password"
-       name="confirm_password"
-       placeholder="Confirm Password"
-       required>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem; margin-top: 1rem;">
+                <i class="fa-solid fa-key"></i> Update Password & Sign In
+            </button>
 
-<button type="submit">Reset Password</button>
+        </form>
 
-</form>
+        <div class="auth-footer">
+            Remembered your old password? <a href="/login">Cancel and Sign In</a>
+        </div>
 
-{% if error %}
-<p class="error">{{ error }}</p>
-{% endif %}
+    </div>
 
-</div>
-
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
 </body>
 </html>

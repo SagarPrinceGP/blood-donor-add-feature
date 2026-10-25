@@ -1,166 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Register - Blood Donor</title>
-
-<style>
-
-body{
-    margin:0;
-    height:100vh;
-
-    display:flex;
-    justify-content:flex-end;
-    align-items:center;
-
-    background: url("/static/blood_bg.jpg")
-                no-repeat center center fixed;
-
-    background-size: 60%;
-
-    font-family: Arial, sans-serif;
-}
-
-/* Dark overlay */
-.overlay{
-    width:100%;
-    height:100%;
-    background: rgba(0,0,0,0.6);
-
-    display:flex;
-    justify-content:flex-end;
-    align-items:center;
-}
-
-/* Register Box */
-.box{
-    width:370px;
-    background:rgb(213, 132, 132);
-
-    padding:30px;
-    margin-right:80px;
-
-    border-radius:12px;
-    box-shadow:0 0 25px rgba(0,0,0,0.5);
-}
-
-.box h2{
-    text-align:center;
-    color:#c0392b;
-    margin-bottom:20px;
-}
-
-/* Inputs */
-.box input{
-    width:100%;
-    padding:10px;
-    margin:10px 0;
-
-    border:1px solid #ccc;
-    border-radius:5px;
-    font-size:14px;
-}
-
-/* Password rules */
-.pass-rule{
-    font-size:12px;
-    color:#555;
-    background:#f2f2f2;
-
-    padding:8px;
-    border-radius:5px;
-    margin:8px 0;
-    text-align:left;
-}
-
-/* Button */
-.box button{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-
-    background:#c0392b;
-    color:white;
-
-    border:none;
-    border-radius:5px;
-
-    font-size:16px;
-    cursor:pointer;
-}
-
-.box button:hover{
-    background:#922b21;
-}
-
-/* Links */
-.links{
-    text-align:center;
-    margin-top:15px;
-}
-
-.links a{
-    text-decoration:none;
-    color:#c0392b;
-    font-size:14px;
-}
-
-.links a:hover{
-    text-decoration:underline;
-}
-
-/* Error */
-.error{
-    color:red;
-    text-align:center;
-    font-size:14px;
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - LifePulse Blood Network</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<body class="auth-page">
 
-<body>
+    <div class="auth-card" style="max-width: 480px;">
+        
+        <div class="auth-header">
+            <div class="brand-icon">
+                <i class="fa-solid fa-droplet"></i>
+            </div>
+            <h2>Join LifePulse</h2>
+            <p>Register to coordinate and manage blood donations</p>
+        </div>
 
-<div class="overlay">
+        {% if error %}
+        <div class="alert alert-danger" style="margin-bottom: 1.5rem; font-size: 0.88rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ error }}</span>
+            </div>
+        </div>
+        {% endif %}
 
-    <div class="box">
-
-        <h2>🩸 Register</h2>
-
-        <form method="POST">
-
-            <input type="text" name="name"
-                   placeholder="Enter Name" required>
-
-            <input type="email" name="email"
-                   placeholder="Enter Email" required>
-
-            <input type="password" name="password"
-                   placeholder="Enter Password" required>
-
-            <div class="pass-rule">
-                Password must contain:<br>
-                • 8+ characters<br>
-                • One Capital Letter<br>
-                • One Number<br>
-                • One Special Character
+        <form action="/register" method="POST" id="regForm">
+            
+            <div class="form-group">
+                <label class="form-label" for="name">Your Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Sagar GP" required autofocus>
             </div>
 
-            <button type="submit">Create Account</button>
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Create Password</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Create a strong password" required oninput="validatePassword(this.value)">
+                    <button type="button" class="password-toggle-btn" onclick="togglePassword('password', this)" title="Show/Hide Password">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE PASSWORD REQUIREMENTS CHECKLIST -->
+            <div class="password-rules">
+                <span style="font-weight: 700; color: var(--secondary);">Password requirements:</span>
+                <ul>
+                    <li id="rule-length">
+                        <i class="fa-regular fa-circle" id="icon-length"></i> At least 8 characters
+                    </li>
+                    <li id="rule-capital">
+                        <i class="fa-regular fa-circle" id="icon-capital"></i> At least one uppercase letter (A-Z)
+                    </li>
+                    <li id="rule-number">
+                        <i class="fa-regular fa-circle" id="icon-number"></i> At least one number (0-9)
+                    </li>
+                    <li id="rule-special">
+                        <i class="fa-regular fa-circle" id="icon-special"></i> At least one special symbol (!@#$%^&*)
+                    </li>
+                </ul>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                <i class="fa-solid fa-user-plus"></i> Create Account
+            </button>
 
         </form>
 
-        {% if error %}
-        <p class="error">{{ error }}</p>
-        {% endif %}
-
-        <div class="links">
-            <a href="/login">Already have account? Login</a>
+        <div class="auth-footer">
+            Already registered? <a href="/login">Sign In</a>
         </div>
 
     </div>
 
-</div>
+    <script>
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
 
+        function validatePassword(val) {
+            const hasLen = val.length >= 8;
+            const hasCap = /[A-Z]/.test(val);
+            const hasNum = /[0-9]/.test(val);
+            const hasSpec = /[!@#$%^&*(),.?":{}|<>]/.test(val);
+
+            updateRule('rule-length', 'icon-length', hasLen);
+            updateRule('rule-capital', 'icon-capital', hasCap);
+            updateRule('rule-number', 'icon-number', hasNum);
+            updateRule('rule-special', 'icon-special', hasSpec);
+        }
+
+        function updateRule(ruleId, iconId, isValid) {
+            const rule = document.getElementById(ruleId);
+            const icon = document.getElementById(iconId);
+            if (isValid) {
+                rule.classList.add('valid');
+                icon.className = 'fa-solid fa-circle-check';
+            } else {
+                rule.classList.remove('valid');
+                icon.className = 'fa-regular fa-circle';
+            }
+        }
+    </script>
 </body>
 </html>

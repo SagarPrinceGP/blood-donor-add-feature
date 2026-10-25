@@ -1,174 +1,164 @@
-<!DOCTYPE html>
-<html>
-<head>
-<title>Blood Donor Entry</title>
+{% extends "base.html" %}
 
-<style>
+{% block title %}Add Blood Donor - LifePulse{% endblock %}
 
-body{
-    margin:0;
-    height:100vh;
+{% block content %}
+<div style="max-width: 950px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--secondary); display: flex; align-items: center; gap: 0.65rem;">
+            <i class="fa-solid fa-user-plus" style="color: var(--primary);"></i>
+            Register New Blood Donor
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+            Add a compassionate hero to our lifesaving network. Please ensure donor eligibility before adding.
+        </p>
+    </div>
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; align-items: start;">
+        
+        <!-- FORM CARD -->
+        <div class="card" style="margin-bottom: 0;">
+            <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--secondary); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-address-card" style="color: var(--primary);"></i>
+                Donor Information
+            </h2>
 
-    background: url("https://images.unsplash.com/photo-1615461065929-4f8ffed6ca40") no-repeat center center fixed;
-    background-size: 100%;
+            <form action="/add" method="POST">
+                
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label class="form-label" for="name">
+                        Full Name <span style="color: var(--danger);">*</span>
+                    </label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
+                </div>
 
-    font-family: Arial;
-}
+                <!-- Blood Group & City Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="blood">
+                            Blood Group <span style="color: var(--danger);">*</span>
+                        </label>
+                        <select id="blood" name="blood" class="form-select" required>
+                            <option value="">-- Select Group --</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
 
-/* Dark overlay for readability */
-.overlay{
-    width:100%;
-    height:100%;
-    background: rgba(0,0,0,0.6);
+                    <div class="form-group">
+                        <label class="form-label" for="city">
+                            City / Town <span style="color: var(--danger);">*</span>
+                        </label>
+                        <input type="text" id="city" name="city" class="form-control" placeholder="e.g. Mysore, Bangalore" required>
+                    </div>
+                </div>
 
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
+                <!-- Phone Number -->
+                <div class="form-group">
+                    <label class="form-label" for="phone">
+                        Contact Phone Number <span style="color: var(--danger);">*</span>
+                    </label>
+                    <div style="position: relative;">
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" 
+                               pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" required>
+                    </div>
+                    <div class="form-hint">Must be 10 digits without country code</div>
+                </div>
 
-/* Form Card */
-.card{
-    width:400px;
-    background: rgba(255,255,255,0.95);
+                <!-- Age & Gender Grid -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="age">Age (Years)</label>
+                        <input type="number" id="age" name="age" class="form-control" min="18" max="65" value="25" placeholder="18 - 65">
+                    </div>
 
-    padding:35px;
-    border-radius:15px;
+                    <div class="form-group">
+                        <label class="form-label" for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-select">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
 
-    text-align:center;
+                <!-- Availability Status -->
+                <div class="form-group">
+                    <label class="form-label" for="status">Current Availability</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="Available" selected>🟢 Available for Immediate Donation</option>
+                        <option value="Donated Recently">🟡 Donated Recently (< 90 Days)</option>
+                        <option value="Unavailable">⚪ Temporarily Unavailable</option>
+                    </select>
+                </div>
 
-    box-shadow:0 0 25px rgba(0,0,0,0.4);
-}
+                <!-- Last Donation Date -->
+                <div class="form-group">
+                    <label class="form-label" for="last_donated">Last Donation Date (Optional)</label>
+                    <input type="date" id="last_donated" name="last_donated" class="form-control">
+                </div>
 
-/* Heading */
-.card h2{
-    color:#e74c3c;
-    margin-bottom:25px;
-}
+                <div style="margin-top: 1.75rem; display: flex; gap: 0.75rem;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <i class="fa-solid fa-heart-pulse"></i> Save & Register Donor
+                    </button>
+                    <a href="/donors" class="btn btn-secondary">Cancel</a>
+                </div>
 
-/* Inputs */
-.card input{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
+            </form>
+        </div>
 
-    border:1px solid #ccc;
-    border-radius:8px;
+        <!-- ELIGIBILITY & INFO CARD -->
+        <div>
+            <div class="card" style="background: linear-gradient(to bottom right, #ffffff, #fef2f2); border-color: #fecaca; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: #991b1b; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Donor Eligibility Checklist
+                </h3>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.9rem; color: #4b5563;">
+                    <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                        <i class="fa-solid fa-check" style="color: #059669; margin-top: 0.2rem;"></i>
+                        <span>Age between <strong>18 and 65 years</strong>.</span>
+                    </li>
+                    <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                        <i class="fa-solid fa-check" style="color: #059669; margin-top: 0.2rem;"></i>
+                        <span>Weight minimum of <strong>50 kg</strong> (110 lbs).</span>
+                    </li>
+                    <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                        <i class="fa-solid fa-check" style="color: #059669; margin-top: 0.2rem;"></i>
+                        <span>Hemoglobin level minimum <strong>12.5 g/dL</strong>.</span>
+                    </li>
+                    <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                        <i class="fa-solid fa-check" style="color: #059669; margin-top: 0.2rem;"></i>
+                        <span>At least <strong>90 days</strong> (3 months) since last whole blood donation.</span>
+                    </li>
+                    <li style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                        <i class="fa-solid fa-check" style="color: #059669; margin-top: 0.2rem;"></i>
+                        <span>No major surgery, tattoo, or piercing within past 6 months.</span>
+                    </li>
+                </ul>
+            </div>
 
-    font-size:14px;
-}
+            <div class="card" style="background: #f8fafc; margin-bottom: 0;">
+                <h4 style="font-size: 1rem; font-weight: 700; color: var(--secondary); margin-bottom: 0.65rem;">
+                    <i class="fa-solid fa-shield-halved" style="color: #3b82f6;"></i>
+                    Data Privacy & Respect
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                    Donor phone numbers and details stored on LifePulse are strictly utilized for life-saving emergency blood coordination. Never share donor contacts for unauthorized purposes.
+                </p>
+            </div>
+        </div>
 
-/* Button */
-.card button{
-    width:100%;
-    padding:12px;
-    margin-top:15px;
-
-    background:#e74c3c;
-    color:white;
-
-    border:none;
-    border-radius:8px;
-
-    font-size:16px;
-    cursor:pointer;
-}
-
-.card button:hover{
-    background:#c0392b;
-}
-
-/* Links */
-.links{
-    margin-top:15px;
-}
-
-.links a{
-    text-decoration:none;
-    color:#444;
-    font-size:14px;
-}
-
-.links a:hover{
-    text-decoration:underline;
-}
-
-/* Message */
-.msg{
-    color:green;
-    font-weight:bold;
-    margin-top:10px;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="overlay">
-    .overlay{
-    width:100%;
-    height:100%;
-    background: rgba(0,0,0,0.6);
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-<div class="card">
-
-<h2>🩸 Add Blood Donor</h2>
-
-<form action="/add" method="POST">
-
-<input type="text" name="name" placeholder="Enter Name" required>
-
-<select name="blood" required
-        style="width:100%; padding:10px; margin:10px 0;
-               border:1px solid #b34545; border-radius:5px;">
-
-    <option value="">-- Select Blood Group --</option>
-
-    <option value="A+">A+</option>
-    <option value="A-">A-</option>
-
-    <option value="B+">B+</option>
-    <option value="B-">B-</option>
-
-    <option value="AB+">AB+</option>
-    <option value="AB-">AB-</option>
-
-    <option value="O+">O+</option>
-    <option value="O-">O-</option>
-
-</select>
-
-<input type="text" name="phone" placeholder="Phone Number" required>
-
-<input type="text" name="city" placeholder="City" required>
-
-<button type="submit">Add Donor</button>
-
-</form>
-
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<p class="msg">{{ messages[0] }}</p>
-{% endif %}
-{% endwith %}
-
-<div class="links">
-<a href="/view">View Donors</a> |
-<a href="/logout">Logout</a>
-</div>
+    </div>
 
 </div>
-
-</div>
-
-</body>
-</html>
+{% endblock %}

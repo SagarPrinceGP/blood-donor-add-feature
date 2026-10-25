@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Blood Compatibility Matrix & Smart Matcher - LifePulse{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--secondary); display: flex; align-items: center; gap: 0.65rem;">
+        <i class="fa-solid fa-dna" style="color: var(--primary);"></i>
+        Smart Blood Compatibility & Matcher
+    </h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+        Select a recipient blood type to instantly determine safe donor types and discover real available donors in our network.
+    </p>
+</div>
+
+<!-- COMPATIBILITY SELECTOR BOX -->
+<div class="compatibility-box">
+    <div style="text-align: center; max-width: 650px; margin: 0 auto;">
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--secondary);">
+            Step 1: Select Recipient / Patient Blood Group
+        </h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.25rem;">
+            Which blood group does the recipient need? Click to match:
+        </p>
+
+        <!-- Blood Type Selector Buttons -->
+        <div class="type-selector">
+            {% for b in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
+                <button type="button" class="type-btn {% if selected_group == b %}active{% endif %}" onclick="selectBloodGroup('{{ b }}')">
+                    {{ b }}
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- LIVE COMPATIBILITY RESULTS -->
+    <div id="matchDisplay">
+        <div class="match-results-grid">
+            
+            <!-- CAN RECEIVE FROM -->
+            <div class="match-box match-box-receive">
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #22c55e; color: white; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #166534;">
+                            Can Receive Red Cells From:
+                        </h4>
+                        <span style="font-size: 0.8rem; color: #15803d;">Compatible donor groups for <strong id="lblSelected">{{ selected_group }}</strong></span>
+                    </div>
+                </div>
+
+                <div id="receivePills" style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+                    {% for g in comp_data.can_receive %}
+                        <span class="blood-pill" style="background: white; border: 1px solid #86efac; color: #166534; font-size: 1.05rem; padding: 0.35rem 0.85rem;">
+                            <i class="fa-solid fa-check" style="font-size: 0.8rem; margin-right: 0.3rem; color: #22c55e;"></i> {{ g }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- CAN DONATE TO -->
+            <div class="match-box match-box-donate">
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #1e40af;">
+                            Can Safely Donate To:
+                        </h4>
+                        <span style="font-size: 0.8rem; color: #1d4ed8;">Recipients who can receive <strong id="lblSelected2">{{ selected_group }}</strong></span>
+                    </div>
+                </div>
+
+                <div id="donatePills" style="display: flex; flex-wrap: wrap; gap: 0.6rem;">
+                    {% for g in comp_data.can_donate %}
+                        <span class="blood-pill" style="background: white; border: 1px solid #93c5fd; color: #1e40af; font-size: 1.05rem; padding: 0.35rem 0.85rem;">
+                            <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem; margin-right: 0.3rem; color: #3b82f6;"></i> {{ g }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- SPECIAL BADGE -->
+        <div id="specialBadge" style="margin-top: 1.5rem; text-align: center;">
+            {% if selected_group == 'O-' %}
+                <div style="background: #fef3c7; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 0.85rem 1.25rem; display: inline-flex; align-items: center; gap: 0.6rem; color: #92400e; font-weight: 600; font-size: 0.95rem;">
+                    <i class="fa-solid fa-star" style="color: #f59e0b;"></i>
+                    <strong>Universal Red Cell Donor:</strong> O- blood can be given to ANY recipient in medical emergencies!
+                </div>
+            {% elif selected_group == 'AB+' %}
+                <div style="background: #ede9fe; border: 1px solid #ddd6fe; border-radius: var(--radius-md); padding: 0.85rem 1.25rem; display: inline-flex; align-items: center; gap: 0.6rem; color: #5b21b6; font-weight: 600; font-size: 0.95rem;">
+                    <i class="fa-solid fa-crown" style="color: #8b5cf6;"></i>
+                    <strong>Universal Red Cell Recipient:</strong> AB+ individuals can safely receive red blood cells from ANY blood type!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MATCHING ACTIVE DONORS IN NETWORK -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-title">
+        <span>
+            <i class="fa-solid fa-bolt" style="color: #eab308; margin-right: 0.5rem;"></i>
+            Available Compatible Donors in Registry ({{ matching_donors|length }})
+        </span>
+        <span style="font-size: 0.85rem; font-weight: normal; color: var(--text-muted);">
+            Filtered for compatibility with <strong>{{ selected_group }}</strong>
+        </span>
+    </div>
+
+    {% if matching_donors and matching_donors|length > 0 %}
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Blood Group</th>
+                    <th>Donor Name</th>
+                    <th>City / District</th>
+                    <th>Status</th>
+                    <th>Quick Contact</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in matching_donors %}
+                <tr>
+                    <td>
+                        <span class="blood-pill">{{ d.blood }}</span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--secondary);">{{ d.name }}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            Age: {{ d.age if d.age else '25+' }} &bull; {{ d.gender if d.gender else 'Donor' }}
+                        </div>
+                    </td>
+                    <td>
+                        <i class="fa-solid fa-location-dot" style="color: #ef4444; font-size: 0.85rem; margin-right: 0.25rem;"></i>
+                        <span style="font-weight: 500;">{{ d.city|title }}</span>
+                    </td>
+                    <td>
+                        {% if d.status == 'Available' %}
+                            <span class="status-badge status-available">
+                                <i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Available
+                            </span>
+                        {% elif d.status == 'Donated Recently' %}
+                            <span class="status-badge status-recent">
+                                <i class="fa-solid fa-clock" style="font-size: 0.65rem;"></i> Donated Recently
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-unavailable">
+                                <i class="fa-solid fa-ban" style="font-size: 0.65rem;"></i> Unavailable
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem; align-items: center;">
+                            <a href="https://wa.me/91{{ d.phone|replace(' ', '')|replace('-', '') }}?text=Hello%20{{ d.name }}%2C%20we%20have%20an%20urgent%20match%20for%20{{ selected_group }}%20blood%20requirement%20in%20{{ d.city }}.%20Can%20you%20donate%3F" 
+                               target="_blank" class="btn btn-sm btn-whatsapp" title="WhatsApp Donor">
+                                <i class="fa-brands fa-whatsapp"></i> Chat
+                            </a>
+                            <a href="tel:{{ d.phone }}" class="btn btn-sm btn-call" title="Call Donor">
+                                <i class="fa-solid fa-phone"></i>
+                            </a>
+                            <button onclick="copyToClipboard('{{ d.phone }}', '{{ d.name }}\'s phone')" class="btn btn-sm btn-secondary" title="Copy Number">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
+        <i class="fa-solid fa-user-xmark" style="font-size: 2.2rem; color: #ef4444; margin-bottom: 0.75rem;"></i>
+        <h4 style="font-weight: 700; color: var(--secondary);">No active matching donors currently found in registry</h4>
+        <p style="font-size: 0.88rem; margin-top: 0.35rem;">
+            Try registering a new donor with one of the compatible groups ({% for g in comp_data.can_receive %}{{ g }}{% if not loop.last %}, {% endif %}{% endfor %}).
+        </p>
+        <a href="/add_donor" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fa-solid fa-user-plus"></i> Add Compatible Donor
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- BLOOD COMPATIBILITY REFERENCE TABLE -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-title">
+        <span><i class="fa-solid fa-table-cells" style="color: var(--secondary); margin-right: 0.5rem;"></i> Complete Blood Compatibility Reference Table</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Blood Group</th>
+                    <th>Can Safely Give Blood To</th>
+                    <th>Can Safely Receive Blood From</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="blood-pill">O-</span></td>
+                    <td><strong style="color: #059669;">Everyone (Universal Donor)</strong> &bull; A+, A-, B+, B-, AB+, AB-, O+, O-</td>
+                    <td>O- only</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">O+</span></td>
+                    <td>O+, A+, B+, AB+</td>
+                    <td>O+, O-</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">A-</span></td>
+                    <td>A-, A+, AB-, AB+</td>
+                    <td>A-, O-</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">A+</span></td>
+                    <td>A+, AB+</td>
+                    <td>A+, A-, O+, O-</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">B-</span></td>
+                    <td>B-, B+, AB-, AB+</td>
+                    <td>B-, O-</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">B+</span></td>
+                    <td>B+, AB+</td>
+                    <td>B+, B-, O+, O-</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">AB-</span></td>
+                    <td>AB-, AB+</td>
+                    <td>AB-, A-, B-, O-</td>
+                </tr>
+                <tr>
+                    <td><span class="blood-pill">AB+</span></td>
+                    <td>AB+ only</td>
+                    <td><strong style="color: #2563eb;">Everyone (Universal Recipient)</strong> &bull; All 8 Blood Types</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function selectBloodGroup(group) {
+        window.location.href = '/compatibility?blood=' + encodeURIComponent(group);
+    }
+</script>
+{% endblock %}

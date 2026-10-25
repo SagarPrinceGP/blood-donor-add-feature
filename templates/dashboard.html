@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - LifePulse Blood Donor Network{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER -->
+<section class="hero-banner">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <i class="fa-solid fa-heart-pulse"></i> Life-Saving Network Active
+        </div>
+        <h1 class="hero-title">Welcome back, {{ session.get('user', 'Friend') }}!</h1>
+        <p class="hero-subtitle">
+            Every drop counts. Connect critical blood requests with active donors, monitor real-time blood group availability, and save lives faster.
+        </p>
+        <div class="hero-actions">
+            <a href="/add_donor" class="btn btn-white">
+                <i class="fa-solid fa-user-plus"></i> Register New Donor
+            </a>
+            <a href="/requests" class="btn btn-outline-white">
+                <i class="fa-solid fa-kit-medical"></i> Post Urgent Request
+            </a>
+            <a href="/compatibility" class="btn btn-outline-white">
+                <i class="fa-solid fa-dna"></i> Compatibility Matcher
+            </a>
+            <a href="/export_csv" class="btn btn-outline-white" title="Download Donors as CSV">
+                <i class="fa-solid fa-file-arrow-down"></i> Export CSV
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- TOP STATS METRIC CARDS -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon-wrapper icon-red">
+            <i class="fa-solid fa-hand-holding-droplet"></i>
+        </div>
+        <div>
+            <div class="stat-value">{{ total_donors }}</div>
+            <div class="stat-label">Total Donors Registered</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrapper icon-green">
+            <i class="fa-solid fa-user-check"></i>
+        </div>
+        <div>
+            <div class="stat-value">{{ available_donors }}</div>
+            <div class="stat-label">Available for Immediate Donation</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrapper icon-amber">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+            <div class="stat-value">{{ pending_requests }}</div>
+            <div class="stat-label">Pending Urgent Requests</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon-wrapper icon-blue">
+            <i class="fa-solid fa-city"></i>
+        </div>
+        <div>
+            <div class="stat-value">{{ total_cities }}</div>
+            <div class="stat-label">Cities & Districts Covered</div>
+        </div>
+    </div>
+</section>
+
+<!-- BLOOD GROUP INVENTORY SECTION -->
+<section class="mb-4">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fa-solid fa-droplet" style="color: var(--primary);"></i>
+            Blood Group Directory Overview
+        </h2>
+        <span style="font-size: 0.88rem; color: var(--text-muted);">
+            Click any blood card to view donors
+        </span>
+    </div>
+
+    <div class="blood-grid">
+        {% for b_type in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
+            {% set count = blood_counts.get(b_type, 0) %}
+            <a href="/donors?blood={{ b_type|urlencode }}" class="blood-card" title="Filter {{ b_type }} donors">
+                <div class="blood-badge-large">{{ b_type }}</div>
+                <div class="blood-count">{{ count }}</div>
+                <div class="blood-sub">Donor{{ 's' if count != 1 else '' }}</div>
+            </a>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- TWO COLUMN GRID: CHART & ACTIVE EMERGENCY REQUESTS -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.75rem; margin-bottom: 2.25rem;">
+    
+    <!-- CHART CARD -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-chart-pie" style="color: var(--primary); margin-right: 0.5rem;"></i> Blood Type Distribution</span>
+            <span style="font-size: 0.82rem; font-weight: normal; color: var(--text-muted);">Real-time inventory</span>
+        </div>
+        <div style="position: relative; height: 260px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="bloodChart"></canvas>
+        </div>
+    </div>
+
+    <!-- URGENT BLOOD REQUESTS FEED -->
+    <div class="card" style="margin-bottom: 0;">
+        <div class="card-title">
+            <span><i class="fa-solid fa-kit-medical" style="color: #e11d48; margin-right: 0.5rem;"></i> Urgent Blood Requirements</span>
+            <a href="/requests" class="btn btn-sm btn-secondary">View All</a>
+        </div>
+
+        {% if urgent_requests and urgent_requests|length > 0 %}
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                {% for req in urgent_requests %}
+                    <div style="background: #f8fafc; border: 1px solid var(--border); border-left: 4px solid {% if req.urgency == 'Critical' %}#ef4444{% elif req.urgency == 'Urgent' %}#f59e0b{% else %}#3b82f6{% endif %}; border-radius: var(--radius-md); padding: 0.9rem 1.1rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <span class="blood-pill">{{ req.blood_group }}</span>
+                                <strong style="font-size: 0.95rem; color: var(--secondary);">{{ req.units }} Unit(s) Needed</strong>
+                                <span class="status-badge {% if req.urgency == 'Critical' %}urgency-critical{% elif req.urgency == 'Urgent' %}urgency-urgent{% else %}urgency-standard{% endif %}">
+                                    {{ req.urgency }}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.84rem; color: var(--text-muted);">
+                                <span><i class="fa-regular fa-user"></i> {{ req.patient_name }}</span> &bull; 
+                                <span><i class="fa-solid fa-hospital"></i> {{ req.hospital }}, {{ req.city }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="/compatibility?blood={{ req.blood_group|urlencode }}" class="btn btn-sm btn-primary" title="Find compatible donors">
+                                <i class="fa-solid fa-bolt"></i> Match
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                <i class="fa-regular fa-circle-check" style="font-size: 2.5rem; color: #10b981; margin-bottom: 0.75rem;"></i>
+                <p style="font-weight: 600;">No pending urgent blood requests!</p>
+                <p style="font-size: 0.85rem; margin-top: 0.25rem;">All patient blood requirements are currently fulfilled.</p>
+                <a href="/requests" class="btn btn-sm btn-secondary" style="margin-top: 1rem;">Post Request</a>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- RECENT DONORS TABLE -->
+<div class="card">
+    <div class="card-title">
+        <span><i class="fa-solid fa-users" style="color: var(--primary); margin-right: 0.5rem;"></i> Recently Registered Donors</span>
+        <a href="/donors" class="btn btn-sm btn-secondary">
+            View All Donors ({{ total_donors }}) <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Blood Group</th>
+                    <th>Donor Name</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Quick Contact</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in recent_donors %}
+                <tr>
+                    <td>
+                        <span class="blood-pill">{{ d.blood }}</span>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--secondary);">{{ d.name }}</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            {{ d.gender if d.gender else 'Donor' }} &bull; Age: {{ d.age if d.age else '25+' }}
+                        </div>
+                    </td>
+                    <td>
+                        <i class="fa-solid fa-location-dot" style="color: #ef4444; font-size: 0.85rem; margin-right: 0.25rem;"></i>
+                        <span style="font-weight: 500;">{{ d.city }}</span>
+                    </td>
+                    <td>
+                        {% if d.status == 'Available' %}
+                            <span class="status-badge status-available">
+                                <i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Available Now
+                            </span>
+                        {% elif d.status == 'Donated Recently' %}
+                            <span class="status-badge status-recent">
+                                <i class="fa-solid fa-clock" style="font-size: 0.65rem;"></i> Recently Donated
+                            </span>
+                        {% else %}
+                            <span class="status-badge status-unavailable">
+                                <i class="fa-solid fa-ban" style="font-size: 0.65rem;"></i> Unavailable
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem; align-items: center;">
+                            <a href="https://wa.me/91{{ d.phone|replace(' ', '')|replace('-', '') }}?text=Hello%20{{ d.name }}%2C%20we%20found%20your%20profile%20on%20LifePulse%20Blood%20Network.%20Are%20you%20available%20for%20a%20blood%20donation%20in%20{{ d.city }}%3F" 
+                               target="_blank" class="btn btn-sm btn-whatsapp" title="WhatsApp Message">
+                                <i class="fa-brands fa-whatsapp"></i> Chat
+                            </a>
+                            <a href="tel:{{ d.phone }}" class="btn btn-sm btn-call" title="Call Donor">
+                                <i class="fa-solid fa-phone"></i>
+                            </a>
+                            <button onclick="copyToClipboard('{{ d.phone }}', '{{ d.name }}\'s phone')" class="btn btn-sm btn-secondary" title="Copy Number">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="/edit/{{ d.id }}" class="btn btn-sm btn-secondary" title="Edit Donor Info">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize Chart.js
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('bloodChart');
+        if (ctx) {
+            const chartData = {
+                labels: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+                datasets: [{
+                    label: 'Donors',
+                    data: [
+                        {{ blood_counts.get('A+', 0) }},
+                        {{ blood_counts.get('A-', 0) }},
+                        {{ blood_counts.get('B+', 0) }},
+                        {{ blood_counts.get('B-', 0) }},
+                        {{ blood_counts.get('AB+', 0) }},
+                        {{ blood_counts.get('AB-', 0) }},
+                        {{ blood_counts.get('O+', 0) }},
+                        {{ blood_counts.get('O-', 0) }}
+                    ],
+                    backgroundColor: [
+                        '#ef4444',
+                        '#f87171',
+                        '#3b82f6',
+                        '#60a5fa',
+                        '#8b5cf6',
+                        '#a78bfa',
+                        '#10b981',
+                        '#34d399'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: "'Plus Jakarta Sans', sans-serif",
+                                    weight: 600,
+                                    size: 11
+                                },
+                                boxWidth: 14,
+                                padding: 12
+                            }
+                        }
+                    },
+                    cutout: '62%'
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
